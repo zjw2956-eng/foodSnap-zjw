@@ -3,13 +3,10 @@ package com.hope.shiro.realm;
 import cn.hutool.core.util.ObjectUtil;
 import com.hope.enums.SysUserStatusEnum;
 import com.hope.model.beans.SysUser;
-import com.hope.service.SysResourceService;
-import com.hope.service.SysRoleService;
 import com.hope.service.SysUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
-import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.mgt.RealmSecurityManager;
@@ -20,44 +17,21 @@ import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.support.DefaultSubjectContext;
 import org.apache.shiro.util.ByteSource;
 import org.crazycake.shiro.RedisSessionDAO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 
-/**
- * Hope自定义Ream(加强版)
- *
- * @program:hope-boot
- * @author:aodeng
- * @blog:低调小熊猫(http://ilovey.live)
- * @微信公众号:低调小熊猫
- * @create:2018-10-29 13:14
- **/
 @Slf4j
 public class HopeShiroRealm extends AuthorizingRealm {
 
     @Autowired
     private SysUserService sysUserService;
     @Autowired
-    private SysResourceService sysResourceService;
-    @Autowired
-    private SysRoleService sysRoleService;
-    @Autowired
     private RedisSessionDAO redisSessionDAO;
 
-    /**
-     * @Description: 认证
-     * @Author: aodeng
-     * @Date: 19-5-17
-     */
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
-
-        //获取用户账号 此处有坑，需谨慎
         UsernamePasswordToken upToken = (UsernamePasswordToken) token;
-
         String username = upToken.getUsername();
 
         SysUser sysuser = sysUserService.selectUserByName(username);
@@ -66,9 +40,8 @@ public class HopeShiroRealm extends AuthorizingRealm {
             throw new UnknownAccountException("帐号不存在！");
         }
         if (SysUserStatusEnum.DISABLE.getCode().equals(sysuser.getStatus())) {
-            throw new LockedAccountException("账号锁定，禁止登录系统，啦啦啦，得玛西亚！");
+            throw new LockedAccountException("账号已被锁定，禁止登录系统！");
         }
-        //如果认证报错了 https://blog.csdn.net/tom9238/article/details/79711651 推荐看看这篇文章
         return new SimpleAuthenticationInfo(
                 sysuser,
                 sysuser.getPassword(),
@@ -77,35 +50,24 @@ public class HopeShiroRealm extends AuthorizingRealm {
         );
     }
 
-    /**
-     * @Description: 授权
-     * @Author: aodeng
-     * @Date: 19-5-17
-     */
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
+        SysUser sysUser = (SysUser) principalCollection.getPrimaryPrincipal();
+        SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
 
-        if (principalCollection == null) {
-            throw new AuthorizationException("principals should not be null");
+        // 根据用户 role 字段赋予角色
+        if ("admin".equals(sysUser.getRole())) {
+            info.addRole("admin");
+        } else {
+            info.addRole("user");
         }
 
-        //根据用户id获取角色，资源
-        SysUser sysUser = (SysUser) principalCollection.getPrimaryPrincipal();
-        Set<String> roles = sysRoleService.findRoleByUserId(sysUser.getId());
-        Set<String> resources = sysResourceService.findPermsByUserId(sysUser.getId());
-
-        //存放查出的用户的所有的角色（role）及权限（permission）
-        SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
-        info.setRoles(roles);
-        info.setStringPermissions(resources);
-
-        log.info("[当前登录用户授权完成,用户id]-[{}]", sysUser.getId());
+        log.info("[当前登录用户授权完成,用户id]-[{}], 角色-[{}]", sysUser.getId(), sysUser.getRole());
         return info;
     }
 
     /***
      * 清除认证信息
-     * @param userIds
      */
     public void removeCachedAuthenticationInfo(List<String> userIds) {
         if (null == userIds || userIds.size() == 0) {
@@ -121,8 +83,6 @@ public class HopeShiroRealm extends AuthorizingRealm {
 
     /**
      * 清除授权信息
-     *
-     * @param userIds
      */
     public void clearAuthorizationByUserId(List<String> userIds) {
         if (null == userIds || userIds.size() == 0) {
@@ -137,22 +97,13 @@ public class HopeShiroRealm extends AuthorizingRealm {
         log.info("[用户权限缓存更新成功]");
     }
 
-    /***
-     * 通过ids获取所有spc
-     * @param userIds
-     * @return
-     */
     private List<SimplePrincipalCollection> getSpcListByUserIds(List<String> userIds) {
-        //获取所有session
         Collection<Session> sessions = redisSessionDAO.getActiveSessions();
-        //定义返回
         List<SimplePrincipalCollection> list = new ArrayList<SimplePrincipalCollection>();
         for (Session session : sessions) {
-            //获取session登录信息
             Object obj = session.getAttribute(DefaultSubjectContext.PRINCIPALS_SESSION_KEY);
             if (null != obj && obj instanceof SimplePrincipalCollection) {
                 SimplePrincipalCollection spc = (SimplePrincipalCollection) obj;
-                //判断用户，匹配用户id
                 obj = spc.getPrimaryPrincipal();
                 if (null != obj && obj instanceof SysUser) {
                     SysUser user = (SysUser) obj;
@@ -164,5 +115,4 @@ public class HopeShiroRealm extends AuthorizingRealm {
         }
         return list;
     }
-
 }

@@ -77,6 +77,11 @@ public class SysUser implements Serializable {
     @ApiModelProperty(value = "用户状态：1有效2删除", name = "status",required = true)
     private Integer status;
     /**
+     * 角色：admin 管理员 / user 普通用户
+     **/
+    @ApiModelProperty(value = "角色：admin 管理员 / user 普通用户", name = "role")
+    private String role;
+    /**
      * 最后登陆时间
      **/
     @ApiModelProperty(value = "最后登陆时间", name = "lastLoginTime")

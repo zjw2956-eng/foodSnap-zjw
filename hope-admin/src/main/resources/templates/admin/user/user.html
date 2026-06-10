@@ -37,15 +37,12 @@
             </form>
         </div>
         <div class="btn-group-sm hidden-xs" id="toolbar" role="group">
-            <a class="btn btn-success" onclick="$.operate.add()" shiro:hasPermission="user:add">
+            <a class="btn btn-success" onclick="$.operate.add()">
                 <i class="fa fa-plus"></i> 新增
             </a>
-            <a class="btn btn-primary btn-edit disabled" onclick="$.operate.edit()" shiro:hasPermission="user:edit">
+            <a class="btn btn-primary btn-edit disabled" onclick="$.operate.edit()">
                 <i class="fa fa-edit"></i> 修改
             </a>
-            <!--<a class="btn btn-danger btn-del disabled" onclick="$.operate.removeAll()" shiro:hasPermission="user:delete">
-                <i class="fa fa-remove"></i> 删除
-            </a>-->
             <a class="btn btn-warning" onclick="$.table.exportExcel()">
                 <i class="fa fa-download"></i> 导出
             </a>
@@ -56,33 +53,8 @@
         </div>
     </div>
 
-    <!--弹框-->
-    <div class="modal fade bs-example-modal-sm" id="selectRole" tabindex="-1" role="dialog" aria-labelledby="selectRoleLabel">
-        <div class="modal-dialog modal-sm" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="selectRoleLabel">分配角色</h4>
-                </div>
-                <div class="modal-body">
-                    <form id="boxRoleForm">
-                        <div class="zTreeDemoBackground left">
-                            <ul id="treeDemo" class="ztree"></ul>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!--/弹框-->
 </div>
 <script th:inline="javascript">
-    var editFlag = "[[${@perms.hasPerm('user:edit')}]]";
-    var deleteFlag = "[[${@perms.hasPerm('user:delete')}]]";
-    var saveUserRoles="[[${@perms.hasPerm('user:saveUserRoles')}]]";
     $(function() {
         var options = {
             url:ctx + "user/list",
@@ -153,58 +125,14 @@
                     align: 'center',
                     formatter: function(value, row, index) {
                         var actions = [];
-                        actions.push(editFlag=='true'?'<a class="btn btn-success btn-xs " href="#" onclick="$.operate.edit(\'' + row.id + '\')"><i class="fa fa-check-square-o"></i>编辑</a> ':'');
-                        actions.push(saveUserRoles=='true'?'<a class="btn btn-primary btn-xs " href="#"  onclick="rule('+row.id+')"><i class="fa fa-check-square-o"></i>分配角色</a> ':'');
-                        actions.push(deleteFlag=='true'?'<a class="btn btn-danger btn-xs " href="#" onclick="deleteBy('+row.id+')"><i class="fa fa-remove"></i>删除</a>':'');
+                        actions.push('<a class="btn btn-success btn-xs " href="#" onclick="$.operate.edit(\'' + row.id + '\')"><i class="fa fa-check-square-o"></i>编辑</a> ');
+                        actions.push('<a class="btn btn-danger btn-xs " href="#" onclick="deleteBy('+row.id+')"><i class="fa fa-remove"></i>删除</a>');
                         return actions.join('');
                     }
                 }]
         };
         $.table.init(options);
     });
-    /*用户管理-分配角色*/
-    function rule(id) {
-        console.log("分配角色");
-        var $this = $(this);
-        var userId = id;
-        $.ajax({
-            async: false,
-            type: "POST",
-            data: {userId: userId},
-            url: '/user/rolesWithSelected',
-            dataType: 'json',
-            success: function (json) {
-                var data = json.data;
-                console.log(data);
-                var setting = {
-                    check: { enable: true, nocheckInherit: true, chkboxType: { "Y": "ps", "N": "ps" } },
-                    data: {
-                        simpleData: {
-                            enable: true
-                        }
-                    },
-                    callback: {
-                        onCheck: function (event, treeId, treeNode) {
-                            console.log(treeNode.tId + ", " + treeNode.name + "," + treeNode.checked);
-                            var treeObj = $.fn.zTree.getZTreeObj(treeId);
-                            var nodes = treeObj.getCheckedNodes(true);
-                            var ids = new Array();
-                            for (var i = 0; i < nodes.length; i++) {
-                                //获取选中节点的值
-                                ids.push(nodes[i].id);
-                            }
-                            //保存
-                            $.post(ctx + "user/saveUserRoles", {"userId": userId, "roleIds": ids.join(",")});
-                        }
-                    }
-                };
-                var tree = $.fn.zTree.init($("#treeDemo"), setting, data);
-                tree.expandAll(true);//全部展开
-
-                $('#selectRole').modal('show');
-            }
-        });
-    }
     /**删除**/
     function deleteBy(id) {
         $.modal.confirm("确定删除该条" + $.table._option.modalName + "信息吗？", function () {

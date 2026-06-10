@@ -31,12 +31,6 @@ public interface SysUserService extends BaseService<SysUser> {
     SysUser getByUserName(String username);
 
     /***
-     * 根据角色id查询用户列表
-     * @return
-     */
-    List<SysUser> listUsersByRoleId(Integer roleId);
-
-    /***
      * 根据主键查询
      * @param integer
      * @return
@@ -51,13 +45,6 @@ public interface SysUserService extends BaseService<SysUser> {
     void updateUserLastLoginInfo(SysUser sysUser);
 
     SysUser selectUserByName(String userName);
-
-    /***
-     * 根据角色id查询用户数据
-     * @param roleId
-     * @return
-     */
-    List<SysUser> findByRoleId(Integer roleId);
 
     /***
      * 根据id更新数据

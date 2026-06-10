@@ -56,11 +56,6 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUser> implements SysU
     }
 
     @Override
-    public List<SysUser> listUsersByRoleId(Integer roleId) {
-        return sysUserMapper.listUsersByRoleId(roleId);
-    }
-
-    @Override
     public SysUser getByPrimaryKey(Integer integer) {
         return sysUserMapper.selectByPrimaryKey(integer);
     }
@@ -73,11 +68,6 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUser> implements SysU
     @Override
     public SysUser selectUserByName(String userName) {
         return sysUserMapper.selectUserByName(userName);
-    }
-
-    @Override
-    public List<SysUser> findByRoleId(Integer roleId) {
-        return sysUserMapper.findByRoleId(roleId);
     }
 
     @Override

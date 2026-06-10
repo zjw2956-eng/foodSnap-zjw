@@ -5,7 +5,6 @@ import com.hope.properties.RedisProperties;
 import com.hope.shiro.credentials.RetryLimitCredentialsMatcher;
 import com.hope.shiro.filter.KickoutSessionControlFilter;
 import com.hope.shiro.realm.HopeShiroRealm;
-import com.hope.shiro.service.ShiroService;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.codec.Base64;
 import org.apache.shiro.mgt.SecurityManager;
@@ -41,9 +40,6 @@ import java.util.Map;
 @Configuration
 @Order(-1) //注解表示加载顺序
 public class ShiroConfig {
-
-    @Autowired
-    private ShiroService shiroService;
 
     @Autowired
     private RedisProperties redisProperties;
@@ -226,8 +222,22 @@ public class ShiroConfig {
         //限制同一个账号同时在线的个数
         filterMap.put("kickout", kickoutSessionControlFilter());
         shiroFilterFactoryBean.setFilters(filterMap);
-        //配置数据库中的resource
-        Map<String, String> filterChainDefinitionMap = shiroService.loadFilterChainDefinitions();
+        //硬编码过滤器链定义
+        Map<String, String> filterChainDefinitionMap = new LinkedHashMap<>();
+        filterChainDefinitionMap.put("/static/**", "anon");
+        filterChainDefinitionMap.put("/css/**", "anon");
+        filterChainDefinitionMap.put("/js/**", "anon");
+        filterChainDefinitionMap.put("/img/**", "anon");
+        filterChainDefinitionMap.put("/lib/**", "anon");
+        filterChainDefinitionMap.put("/kaptcha", "anon");
+        filterChainDefinitionMap.put("/login", "anon");
+        filterChainDefinitionMap.put("/logout", "anon");
+        filterChainDefinitionMap.put("/druid/**", "anon");
+        filterChainDefinitionMap.put("/swagger-ui.html", "anon");
+        filterChainDefinitionMap.put("/swagger-resources/**", "anon");
+        filterChainDefinitionMap.put("/v2/api-docs", "anon");
+        filterChainDefinitionMap.put("/webjars/**", "anon");
+        filterChainDefinitionMap.put("/**", "kickout,user");
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
         return shiroFilterFactoryBean;
     }
