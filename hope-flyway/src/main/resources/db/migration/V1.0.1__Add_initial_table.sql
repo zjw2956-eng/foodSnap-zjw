@@ -1,4 +1,4 @@
-#hope数据库
+#foodSnap数据库
 SET FOREIGN_KEY_CHECKS=0;
 
 #用户表

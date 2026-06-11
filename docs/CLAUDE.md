@@ -4,9 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-Hope-Boot 是一款基于 Spring Boot 2.0.5.RELEASE 的多模块 Maven 脚手架项目，经过裁剪后用于开发美食分享社交平台。技术栈：Spring Boot + Apache Shiro + MyBatis/tk.MyBatis + Redis + Flyway + Thymeleaf + Swagger。
+Hope-Boot 是一款基于 Spring Boot 2.0.5.RELEASE 的多模块 Maven 脚手架项目，经过裁剪后用于开发美食分享社交平台。技术栈：Spring Boot + Apache Shiro + MyBatis/tk.MyBatis + Redis + Flyway + Thymeleaf + Swagger + Minio（图片存储）+ Redisson（分布式锁）。
 
-项目目的：用户晒出午饭/晚餐美食照片，点赞高评分高的入选每日美食榜单。已删除原项目的 RBAC 权限模型（角色-资源五表），权限控制简化为 SysUser 的 `role` 字段（admin/user）。
+项目目的：用户拍照上传美食照片，AI 辅助识别菜品并生成精致文案，浏览者以弹幕形式互动，点赞、评论、收藏。根据综合评分形成每日区域美食榜单，解决"今天吃什么"的选择困难。
+
+双榜机制：实时热榜（每 30 分钟刷新，近 6 小时高赞帖子）+ 每日金榜（0 点 Quartz 结算锁定）。AI 部分由独立 Python 服务处理，Java 主服务通过 HTTP REST 调用。
+
+已删除原项目的 RBAC 权限模型（角色-资源五表），权限控制简化为 SysUser 的 `role` 字段（admin/user）。
 
 JDK 版本：1.8。编码：UTF-8。项目使用 GPL-v3.0 协议。
 
@@ -35,13 +39,18 @@ mvn spring-boot:run
 | `hope-flyway` | 数据库版本迁移（Flyway，最早运行） | `HopeFlywayApplication` | 默认 |
 | `hope-sso-server` | 单点登录认证中心（基于 xxl-sso） | `HopeSsoServerApplication` | 8887 |
 | `hope-generator` | 代码生成器（基于 xxl-code-generator） | `HopeGeneratorApplication` | 8888 |
-| `hope-quartz` | 定时任务（Quartz Scheduler） | `HopeQuartzApplication` | 8889 |
+| `hope-quartz` | 定时任务（每日金榜结算、热榜刷新） | `HopeQuartzApplication` | 8889 |
 
 **模块依赖关系**：`hope-admin` → `hope-core` → `hope-framework`。`hope-sso-server`、`hope-generator`、`hope-quartz`、`hope-flyway` 是独立模块。
 
+## 方案文档
+
+- `docs/实施计划.md` — 完整项目链路、功能模块、技术栈、实施阶段
+- `docs/sql/food_snap_schema.sql` — 建表语句（7 张新表 + sys_user 补充字段）
+
 ## 启动顺序
 
-1. 先创建数据库 `hope`，字符集 `utf8mb4`
+1. 先创建数据库 `foodSnap`，字符集 `utf8mb4`
 2. 配置各模块的 `application.yml` 中的数据库和 Redis 连接信息
 3. 先运行 `hope-flyway`（`HopeFlywayApplication`）完成数据库表结构初始化
 4. 再运行 `hope-admin`（`HopeAdminApplication`）启动后台管理
@@ -94,3 +103,6 @@ hope-flyway 模块使用 Flyway 管理数据库版本。SQL 迁移脚本位于 `
 - 根 POM 的 `<packaging>` 是 `pom`，所有公共依赖（spring-boot-starter-web、lombok、hutool）在根 POM `<dependencies>` 中统一引入，子模块自动继承
 - hope-flyway 模块没有配置打包插件（不用于部署）
 - 前端页面复用自 RuoYi 项目
+- 新增依赖 Minio（图片对象存储）和 Redisson（分布式锁），运行前需本地安装 Minio 服务
+- AI 分析由独立 Python 服务（FastAPI）提供，部署时需单独启动
+- RocketMQ 计划后续引入，当前异步处理使用 Spring @Async + 线程池

@@ -10,6 +10,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -81,6 +82,46 @@ public class SysUser implements Serializable {
      **/
     @ApiModelProperty(value = "角色：admin 管理员 / user 普通用户", name = "role")
     private String role;
+    /**
+     * 昵称
+     **/
+    @ApiModelProperty(value = "昵称", name = "nickname")
+    private String nickname;
+    /**
+     * 头像URL(Minio)
+     **/
+    @ApiModelProperty(value = "头像URL(Minio)", name = "avatarUrl")
+    private String avatarUrl;
+    /**
+     * 所在城市/区域
+     **/
+    @ApiModelProperty(value = "所在城市/区域", name = "location")
+    private String location;
+    /**
+     * 最近一次纬度
+     **/
+    @ApiModelProperty(value = "最近一次纬度", name = "latitude")
+    private BigDecimal latitude;
+    /**
+     * 最近一次经度
+     **/
+    @ApiModelProperty(value = "最近一次经度", name = "longitude")
+    private BigDecimal longitude;
+    /**
+     * 发帖数
+     **/
+    @ApiModelProperty(value = "发帖数", name = "postCount")
+    private Integer postCount;
+    /**
+     * 获赞总数
+     **/
+    @ApiModelProperty(value = "获赞总数", name = "likedCount")
+    private Integer likedCount;
+    /**
+     * 上榜次数
+     **/
+    @ApiModelProperty(value = "上榜次数", name = "rankingCount")
+    private Integer rankingCount;
     /**
      * 最后登陆时间
      **/
