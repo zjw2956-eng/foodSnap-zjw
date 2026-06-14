@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hope.mapper.FoodCommentMapper">
+
+    <select id="selectDanmakusByPostId" resultType="com.hope.model.beans.FoodComment">
+        SELECT * FROM food_comment
+        WHERE post_id = #{postId} AND comment_type = 'danmaku' AND status = 1
+        ORDER BY create_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectCommentsByPostId" resultType="com.hope.model.beans.FoodComment">
+        SELECT * FROM food_comment
+        WHERE post_id = #{postId} AND comment_type = 'normal' AND status = 1
+        <if test="cursor != null and cursor != ''">
+            AND create_time &lt; #{cursor}
+        </if>
+        ORDER BY create_time DESC
+        LIMIT #{size}
+    </select>
+
+</mapper>
