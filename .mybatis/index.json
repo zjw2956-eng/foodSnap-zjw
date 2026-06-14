@@ -1,0 +1,17 @@
+{
+  "version": "1.0",
+  "timestamp": 1781431524157,
+  "projectRoot": "d:\\GitHubRepository\\foodSnap-zjw",
+  "entries": [
+    {
+      "path": "hope-flyway\\target\\classes\\com\\hope\\HopeFlywayApplication.class",
+      "mtime": 1781431521789.0364,
+      "size": 735
+    },
+    {
+      "path": "hope-admin\\target\\classes\\com\\hope\\HopeAdminApplication.class",
+      "mtime": 1781431523580.083,
+      "size": 1135
+    }
+  ]
+}

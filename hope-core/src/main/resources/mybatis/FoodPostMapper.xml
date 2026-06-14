@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hope.mapper.FoodPostMapper">
+  <!-- FoodPostMapper -->
+  <select id="selectFeed" resultType="com.hope.model.beans.FoodPost">
+    SELECT * FROM food_post
+    <where>
+      status=1
+      <if test="areaCode != null and areaCode != ''">
+        AND area_code=#{areaCode}
+      </if>
+      <if test="category != null and category != ''">
+        AND category = #{category}
+      </if>
+      <if test="cursor != null and cursor != ''">
+        AND create_time &lt; #{cursor}
+      </if>
+    </where>
+    ORDER BY create_time DESC
+    LIMIT #{size}
+  </select>
+  
+</mapper>

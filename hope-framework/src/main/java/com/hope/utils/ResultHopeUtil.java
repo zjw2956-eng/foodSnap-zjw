@@ -69,6 +69,7 @@ public class ResultHopeUtil {
     public static ResponseVo success(String message) {
         return success(message, null);
     }
+    
 
     public static ResponseVo success(ResponseStatusEnum statusEnum) {
         return vo(statusEnum.getCode(), statusEnum.getMessage(), null);
