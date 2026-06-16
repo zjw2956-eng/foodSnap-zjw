@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "timestamp": 1781431524157,
+  "timestamp": 1781601021414,
   "projectRoot": "d:\\GitHubRepository\\foodSnap-zjw",
   "entries": [
     {
@@ -9,8 +9,28 @@
       "size": 735
     },
     {
+      "path": "hope-core\\target\\classes\\com\\hope\\shiro\\config\\ShiroConfig.class",
+      "mtime": 1781593707938.3115,
+      "size": 7988
+    },
+    {
+      "path": "hope-quartz\\target\\classes\\com\\hope\\quartz\\config\\SchedulerConfig.class",
+      "mtime": 1781593712904.9058,
+      "size": 1146
+    },
+    {
+      "path": "hope-sso-server\\target\\classes\\com\\hope\\config\\SsoConfig.class",
+      "mtime": 1781593713427.2908,
+      "size": 1210
+    },
+    {
+      "path": "hope-framework\\target\\classes\\com\\hope\\config\\SwaggerConfig.class",
+      "mtime": 1781601019435.692,
+      "size": 2459
+    },
+    {
       "path": "hope-admin\\target\\classes\\com\\hope\\HopeAdminApplication.class",
-      "mtime": 1781431523580.083,
+      "mtime": 1781601020592.9106,
       "size": 1135
     }
   ]

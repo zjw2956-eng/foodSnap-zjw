@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hope.mapper.FoodRankingMapper">
+  <!-- 查询榜单，按排名升序返回 -->
+  <select id="selectRanking" resultType="com.hope.model.beans.FoodRanking">
+    SELECT * FROM food_ranking
+    <where>
+      ranking_date = #{rankingDate}
+      <if test="rankingType != null and rankingType != ''">
+        AND ranking_type=#{rankingType}
+      </if>
+      <if test="areaCode != null and areaCode != ''">
+        AND area_code=#{areaCode}
+      </if>
+      <if test="category != null and category != ''">
+        AND category=#{category}
+      </if>
+    </where>
+    ORDER BY rank_position ASC
+  </select>
+  <!-- 删除指定条件的旧榜单，用于实时热榜刷新 -->
+  <delete id="deleteByCondition">
+    DELETE FROM food_ranking
+    <where>
+      ranking_date = #{rankingDate}
+      <if test="rankingType != null and rankingType != ''">
+        AND ranking_type=#{rankingType}
+      </if>
+      <if test="areaCode != null and areaCode != ''">
+        AND area_code=#{areaCode}
+      </if>
+      <if test="category != null and category != ''">
+        AND category=#{category}
+      </if>
+    </where>
+  </delete>
+  <!-- 批量插入榜单记录 -->
+  <insert id="batchInsert">
+    INSERT INTO food_ranking
+      (ranking_date, ranking_type, post_id, area_code, category, score, rank_position, create_time)
+  VALUES
+    <foreach collection="list" item="item" separator=",">
+      (#{item.rankingDate}, #{item.rankingType}, #{item.postId},
+       #{item.areaCode}, #{item.category}, #{item.score},
+       #{item.rankPosition}, #{item.createTime})
+    </foreach>
+  </insert>
+</mapper>

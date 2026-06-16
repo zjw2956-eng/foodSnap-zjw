@@ -3,8 +3,9 @@ package com.hope.utils;
 import java.io.InputStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import com.hope.config.MinioConfig;
 
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
@@ -17,11 +18,8 @@ public class MinioUtil {
     @Autowired
     private MinioClient minioClient;
 
-    @Value("${minio.endpoint}")
-    private String endpoint;
-
-    @Value("${minio.bucketName:food-snap}")
-    private String bucketName;
+    @Autowired
+    private MinioConfig minioConfig;
 
     /**
      * 上传文件到 Minio
@@ -33,11 +31,11 @@ public class MinioUtil {
      */
     public String upload(InputStream inputStream, String objectName, String contentType, long fileSize) throws Exception {
         minioClient.putObject(PutObjectArgs.builder()
-                .bucket(bucketName)
+                .bucket(minioConfig.getBucketName())
                 .object(objectName)
                 .stream(inputStream, fileSize, -1)
                 .contentType(contentType)
                 .build());
-        return endpoint + "/" + bucketName + "/" + objectName;
+        return minioConfig.getEndpoint() + "/" + minioConfig.getBucketName() + "/" + objectName;
     }
 }
