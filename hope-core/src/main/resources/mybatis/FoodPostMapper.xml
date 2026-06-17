@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.hope.mapper.FoodPostMapper">
   <!-- FoodPostMapper -->
@@ -20,5 +20,29 @@
     ORDER BY create_time DESC
     LIMIT #{size}
   </select>
-  
+
+  <select id="selectRecentPosts" resultType="com.hope.model.beans.FoodPost">
+    SELECT * FROM food_post
+    WHERE status = 1
+      AND create_time >= #{since}
+    ORDER BY create_time DESC
+  </select>
+
+  <select id="selectTodayPosts" resultType="com.hope.model.beans.FoodPost">
+    SELECT * FROM food_post
+    WHERE status = 1
+      AND create_time >= #{today}
+    ORDER BY create_time DESC
+  </select>
+
+  <select id="selectByUserId" resultType="com.hope.model.beans.FoodPost">
+    SELECT * FROM food_post
+    WHERE user_id = #{userId}
+      AND status IN (1, 2)
+    <if test="cursor != null and cursor != ''">
+      AND create_time &lt; #{cursor}
+    </if>
+    ORDER BY create_time DESC
+    LIMIT #{size}
+  </select>
 </mapper>

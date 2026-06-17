@@ -1,0 +1,48 @@
+server:
+  port: 8889
+  tomcat:
+    uri-encoding: utf-8
+
+spring:
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  datasource:
+    driverClassName: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/foodSnap?useUnicode=true&characterEncoding=UTF-8&useSSL=false
+    username: root
+    password: 123456
+    type: com.alibaba.druid.pool.DruidDataSource
+    initial-size: 1
+    minIdle: 3
+    maxActive: 20
+    maxWait: 60000
+    filters: stat,wall,slf4j
+  redis:
+    database: 12
+    host: localhost
+    port: 6379
+    jedis:
+      pool:
+        max-active: 8
+        max-wait: -1
+        max-idle: 8
+        min-idle: 0
+    timeout: 3000
+
+mybatis:
+  type-aliases-package: com.hope.model.beans
+  mapper-locations: classpath:/mybatis/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+mapper:
+  mappers:
+    - com.hope.mybatis.mapper.BaseMapper
+  not-empty: false
+  identity: MYSQL
+
+logging:
+  file: ./logs/quartz.log
+  level:
+    com.hope: DEBUG

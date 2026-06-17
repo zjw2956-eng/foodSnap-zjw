@@ -21,18 +21,15 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.hope.enums.ResponseStatusEnum;
-import com.hope.model.beans.FoodCollect;
 import com.hope.model.beans.FoodComment;
-import com.hope.model.beans.FoodLike;
 import com.hope.model.beans.FoodPost;
 import com.hope.model.beans.FoodSensitiveWord;
 import com.hope.model.beans.SysUser;
 import com.hope.object.ResponseVo;
-import com.hope.service.FoodCollectService;
 import com.hope.service.FoodCommentService;
-import com.hope.service.FoodLikeService;
 import com.hope.service.FoodPostService;
 import com.hope.service.FoodSensitiveWordService;
+import com.hope.service.RedisInteractionService;
 import com.hope.utils.MinioUtil;
 import com.hope.utils.ResultHopeUtil;
 
@@ -53,16 +50,13 @@ public class FoodPostController {
     private MinioUtil minioUtil;
 
     @Autowired
-    private FoodLikeService foodLikeService;
-
-    @Autowired
-    private FoodCollectService foodCollectService;
-
-    @Autowired
     private FoodCommentService foodCommentService;
 
     @Autowired
     private FoodSensitiveWordService foodSensitiveWordService;
+
+    @Autowired
+    private RedisInteractionService redisInteractionService;
 
     /**
      * 用户发帖
@@ -121,6 +115,9 @@ public class FoodPostController {
         if (result == null) {
             return ResultHopeUtil.error("帖子不存在");
         }
+        // 实时从 Redis 取计数，保证数据最新
+        result.setLikeCount((int) redisInteractionService.getLikeCount(result.getId()));
+        result.setCollectCount((int) redisInteractionService.getCollectCount(result.getId()));
         return ResultHopeUtil.success("操作成功", result);
     }
 
@@ -134,6 +131,11 @@ public class FoodPostController {
             @RequestParam(value = "size", defaultValue = "10") String size) {
         int limit = Integer.parseInt(size);
         List<FoodPost> list = foodPostService.feed(areaCode, category, cursor, limit);
+        // feed 流中每个帖子实时补全 Redis 计数字段
+        for (FoodPost post : list) {
+            post.setLikeCount((int) redisInteractionService.getLikeCount(post.getId()));
+            post.setCollectCount((int) redisInteractionService.getCollectCount(post.getId()));
+        }
         return ResultHopeUtil.success("操作成功", list);
     }
 
@@ -160,7 +162,10 @@ public class FoodPostController {
     }
 
     /**
-     * 点赞/取消点赞
+     * 点赞/取消点赞 — Redis Set 实现，O(1) 操作
+     *
+     * 数据结构：post:like:{postId} → Set<userId>
+     * SADD 天然去重，SREM 取消，SCARD O(1) 计数
      */
     @PostMapping("/{postUuid}/like")
     public ResponseVo<?> toggleLike(@PathVariable String postUuid) {
@@ -173,38 +178,14 @@ public class FoodPostController {
             return ResultHopeUtil.error("帖子不存在");
         }
 
-        // 查询是否已点赞
-        FoodLike likeQuery = new FoodLike();
-        likeQuery.setPostId(post.getId());
-        likeQuery.setUserId(user.getId());
-        FoodLike existing = foodLikeService.selectOne(likeQuery);
-
-        if (existing != null) {
-            // 已点赞 → 取消
-            foodLikeService.deleteById(existing.getId());
-        } else {
-            // 未点赞 → 点赞
-            FoodLike newLike = new FoodLike();
-            newLike.setPostId(post.getId());
-            newLike.setUserId(user.getId());
-            foodLikeService.insert(newLike);
-        }
-
-        // 更新帖子点赞数
-        FoodLike countQuery = new FoodLike();
-        countQuery.setPostId(post.getId());
-        int newCount = foodLikeService.select(countQuery).size();
-        post.setLikeCount(newCount);
-        foodPostService.updateSelectiveById(post);
-
-        Map<String, Object> data = new HashMap<>();
-        data.put("liked", existing == null);
-        data.put("likeCount", newCount);
-        return ResultHopeUtil.success(existing != null ? "取消点赞" : "点赞成功", data);
+        Map<String, Object> result = redisInteractionService.toggleLike(post.getId(), user.getId());
+        return ResultHopeUtil.success((Boolean) result.get("liked") ? "点赞成功" : "取消点赞", result);
     }
 
     /**
-     * 收藏/取消收藏
+     * 收藏/取消收藏 — Redis Set 实现，O(1) 操作
+     *
+     * 数据结构：post:collect:{postId} → Set<userId>
      */
     @PostMapping("/{postUuid}/collect")
     public ResponseVo<?> toggleCollect(@PathVariable String postUuid) {
@@ -217,34 +198,8 @@ public class FoodPostController {
             return ResultHopeUtil.error("帖子不存在");
         }
 
-        // 查询是否已收藏
-        FoodCollect collectQuery = new FoodCollect();
-        collectQuery.setPostId(post.getId());
-        collectQuery.setUserId(user.getId());
-        FoodCollect existing = foodCollectService.selectOne(collectQuery);
-
-        if (existing != null) {
-            // 已收藏 → 取消
-            foodCollectService.deleteById(existing.getId());
-        } else {
-            // 未收藏 → 收藏
-            FoodCollect newCollect = new FoodCollect();
-            newCollect.setPostId(post.getId());
-            newCollect.setUserId(user.getId());
-            foodCollectService.insert(newCollect);
-        }
-
-        // 更新帖子收藏数
-        FoodCollect countQuery = new FoodCollect();
-        countQuery.setPostId(post.getId());
-        int newCount = foodCollectService.select(countQuery).size();
-        post.setCollectCount(newCount);
-        foodPostService.updateSelectiveById(post);
-
-        Map<String, Object> data = new HashMap<>();
-        data.put("collected", existing == null);
-        data.put("collectCount", newCount);
-        return ResultHopeUtil.success(existing != null ? "取消收藏" : "收藏成功", data);
+        Map<String, Object> result = redisInteractionService.toggleCollect(post.getId(), user.getId());
+        return ResultHopeUtil.success((Boolean) result.get("collected") ? "收藏成功" : "取消收藏", result);
     }
 
     /**

@@ -1,6 +1,8 @@
 package com.hope.quartz.schedule;
 
-import com.hope.quartz.job.TestJob1;
+import com.hope.quartz.job.RefreshRealtimeRankingJob;
+import com.hope.quartz.job.SettleDailyRankingJob;
+import com.hope.quartz.job.SyncInteractionToDbJob;
 import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
@@ -38,10 +40,31 @@ public class CronScheduleJob {
     * @Date: 19-5-15
     */ 
     private void schedulejobs(Scheduler scheduler) throws SchedulerException {
-        JobDetail jobDetail = JobBuilder.newJob(TestJob1.class).withIdentity("job","group").build();
-        //间隔 6 秒
-        CronScheduleBuilder scheduleBuilder=CronScheduleBuilder.cronSchedule("0/6 * * * * ?");
-        CronTrigger cronTrigger= TriggerBuilder.newTrigger().withIdentity("trigger","group").withSchedule(scheduleBuilder).build();
-        scheduler.scheduleJob(jobDetail,cronTrigger);
+        // 实时热榜刷新 — 每 30 分钟执行一次
+        JobDetail realtimeJobDetail = JobBuilder.newJob(RefreshRealtimeRankingJob.class)
+                .withIdentity("refreshRealtimeRanking", "ranking").build();
+        CronTrigger realtimeTrigger = TriggerBuilder.newTrigger()
+                .withIdentity("refreshRealtimeRankingTrigger", "ranking")
+                .withSchedule(CronScheduleBuilder.cronSchedule("0 */30 * * * ?"))
+                .build();
+        scheduler.scheduleJob(realtimeJobDetail, realtimeTrigger);
+
+        // 每日金榜结算 — 每日 0 点执行
+        JobDetail dailyJobDetail = JobBuilder.newJob(SettleDailyRankingJob.class)
+                .withIdentity("settleDailyRanking", "ranking").build();
+        CronTrigger dailyTrigger = TriggerBuilder.newTrigger()
+                .withIdentity("settleDailyRankingTrigger", "ranking")
+                .withSchedule(CronScheduleBuilder.cronSchedule("0 0 0 * * ?"))
+                .build();
+        scheduler.scheduleJob(dailyJobDetail, dailyTrigger);
+
+        // Redis 互动数据同步到 DB — 每 5 分钟执行一次
+        JobDetail syncJobDetail = JobBuilder.newJob(SyncInteractionToDbJob.class)
+                .withIdentity("syncInteractionToDb", "maintenance").build();
+        CronTrigger syncTrigger = TriggerBuilder.newTrigger()
+                .withIdentity("syncInteractionToDbTrigger", "maintenance")
+                .withSchedule(CronScheduleBuilder.cronSchedule("0 */5 * * * ?"))
+                .build();
+        scheduler.scheduleJob(syncJobDetail, syncTrigger);
     }
 }

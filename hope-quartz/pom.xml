@@ -34,6 +34,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-quartz</artifactId>
         </dependency>
+        <!-- hope-core 核心业务模块 -->
+        <dependency>
+            <groupId>com.hope</groupId>
+            <artifactId>hope-core</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
