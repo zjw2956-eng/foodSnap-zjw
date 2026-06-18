@@ -139,7 +139,7 @@ com.hope.mq
 <dependency>
     <groupId>org.apache.rocketmq</groupId>
     <artifactId>rocketmq-client</artifactId>
-    <version>5.3.1</version>
+    <version>5.4.0</version>
 </dependency>
 ```
 
@@ -159,42 +159,6 @@ rocketmq:
 ### 本地运行 RocketMQ
 
 **Docker Desktop（推荐）**：
-
-```bash
-# NameServer
-docker run -d --name rmq-namesrv -p 9876:9876 apache/rocketmq:5.3.1 sh mqnamesrv
-
-# Broker
-docker run -d --name rmq-broker \
-  -p 10911:10911 -p 10909:10909 \
-  -e "NAMESRV_ADDR=rmq-namesrv:9876" \
-  apache/rocketmq:5.3.1 sh mqbroker -c /home/rocketmq/conf/broker.conf
-```
-
-或使用 `docker-compose.yml` 一键启动（推荐，方便管理）：
-
-```yaml
-version: '3'
-services:
-  namesrv:
-    image: apache/rocketmq:5.3.1
-    container_name: rmq-namesrv
-    ports:
-      - "9876:9876"
-    command: sh mqnamesrv
-
-  broker:
-    image: apache/rocketmq:5.3.1
-    container_name: rmq-broker
-    ports:
-      - "10911:10911"
-      - "10909:10909"
-    environment:
-      - NAMESRV_ADDR=namesrv:9876
-    command: sh mqbroker -c /home/rocketmq/conf/broker.conf
-    depends_on:
-      - namesrv
-```
 
 > 本地开发单节点足够，生产环境通过配置文件切换为 2m-2s 集群（DLedger Raft 多副本）。
 

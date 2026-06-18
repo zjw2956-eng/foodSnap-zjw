@@ -73,6 +73,22 @@ minio:
   access-key: minioadmin
   secret-key: minioadmin
   bucketName: food-snap
+
+rocketmq:
+  name-server: 127.0.0.1:9876
+  producer:
+    # 生产者组名，必须唯一
+    group: food-snap-producer
+    # 发送消息的超时时间，默认 3000ms
+    send-message-timeout: 3000
+    # 消息体最大长度，默认 4MB
+    max-message-size: 4194304
+    # 压缩消息的阈值，默认 4KB
+    compress-message-body-threshold: 4096
+    # 重试次数，默认 2 次
+    retry-times-when-send-failed: 2
+    # 异步发送失败时是否重试其他 Broker，默认 false
+    retry-next-server: false
 ################################### hope-boot自定义配置 ###################################
 hope:
   druid:

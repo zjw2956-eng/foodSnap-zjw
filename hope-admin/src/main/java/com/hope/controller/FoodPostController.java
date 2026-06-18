@@ -2,7 +2,6 @@ package com.hope.controller;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +24,7 @@ import com.hope.model.beans.FoodComment;
 import com.hope.model.beans.FoodPost;
 import com.hope.model.beans.FoodSensitiveWord;
 import com.hope.model.beans.SysUser;
+import com.hope.mq.producer.PostEventProducer;
 import com.hope.object.ResponseVo;
 import com.hope.service.FoodCommentService;
 import com.hope.service.FoodPostService;
@@ -57,6 +57,9 @@ public class FoodPostController {
 
     @Autowired
     private RedisInteractionService redisInteractionService;
+
+    @Autowired
+    private PostEventProducer postEventProducer;
 
     /**
      * 用户发帖
@@ -100,10 +103,12 @@ public class FoodPostController {
         if (longitude != null) {
             foodPost.setLongitude(longitude);
         }
-        foodPost.setStatus(1);
+        foodPost.setStatus(2);// AI分析中
         // 5. foodPostService.insert(foodPost)
-        foodPostService.insert(foodPost);
-        // 6. return new ResponseVo(ResponseStatusEnum.SUCCESS, foodPost)
+        if (!foodPostService.insert(foodPost)) {
+            return ResultHopeUtil.error("发布失败");
+        }
+        postEventProducer.send(foodPost.getId());
         return new ResponseVo(ResponseStatusEnum.SUCCESS, foodPost);
     }
 
