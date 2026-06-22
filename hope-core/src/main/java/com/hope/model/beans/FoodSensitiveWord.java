@@ -6,12 +6,14 @@ import java.util.Date;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
+@Table(name = "food_sensitive_word")
 public class FoodSensitiveWord implements Serializable {
     private static final long serialVersionUID = 1L;
 

@@ -6,6 +6,12 @@ server:
   max-http-header-size: 8192
   use-forward-headers: true
 spring:
+  servlet:
+    multipart:
+      # 单个文件最大 10MB（默认 1MB 太小，与 Controller 校验的 10MB 对齐）
+      max-file-size: 10MB
+      # 整个请求最大 10MB
+      max-request-size: 10MB
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8

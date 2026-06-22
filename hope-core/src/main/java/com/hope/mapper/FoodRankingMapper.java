@@ -27,7 +27,7 @@ public interface FoodRankingMapper extends BaseMapper<FoodRanking> {
          * 删除指定日期+类型+区域+分类的旧榜单记录
          * 实时热榜刷新时先删除旧数据，再批量插入新数据
          */
-        int deleteByCondition(@Param("rankingDate") String rankingDate,
+        int deleteOldRanking(@Param("rankingDate") String rankingDate,
                         @Param("rankingType") String rankingType,
                         @Param("areaCode") String areaCode,
                         @Param("category") String category);

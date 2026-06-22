@@ -91,6 +91,11 @@ public class FoodPostController {
         FoodPost foodPost = new FoodPost();
         foodPost.setPostUuid(UUID.randomUUID().toString().replace("-", ""));
         SysUser user = (SysUser) SecurityUtils.getSubject().getPrincipal();
+        // TODO 联调临时 mock：未登录时塞测试用户。联调完删掉这段
+        if (user == null) {
+            user = new SysUser();
+            user.setId(1);
+        }
         foodPost.setUserId(user.getId());
         foodPost.setImageUrl(url);
         foodPost.setCategory(category);
@@ -103,9 +108,16 @@ public class FoodPostController {
         if (longitude != null) {
             foodPost.setLongitude(longitude);
         }
+        // 统计字段初始值（NOT NULL 约束，Redis 后续异步同步覆盖）
+        foodPost.setLikeCount(0);
+        foodPost.setCommentCount(0);
+        foodPost.setCollectCount(0);
+        foodPost.setScore(BigDecimal.ZERO);
         foodPost.setStatus(2);// AI分析中
-        // 5. foodPostService.insert(foodPost)
-        if (!foodPostService.insert(foodPost)) {
+        // 5. foodPostService.insertSelective(foodPost)
+        // 用 insertSelective 而非 insert：insert 写全字段（null 也写），MySQL strict mode 下 NOT NULL 列不接受 null；
+        // insertSelective 只写非 null 字段，null 字段由 DB DEFAULT 兜底（create_time/update_time=DEFAULT CURRENT_TIMESTAMP）
+        if (!foodPostService.insertSelective(foodPost)) {
             return ResultHopeUtil.error("发布失败");
         }
         postEventProducer.send(foodPost.getId());

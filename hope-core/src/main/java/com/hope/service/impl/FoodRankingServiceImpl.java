@@ -28,7 +28,7 @@ public class FoodRankingServiceImpl extends BaseServiceImpl<FoodRanking> impleme
     public void saveRanking(String rankingDate, String rankingType, String areaCode, String category,
             List<FoodRanking> rankingList) {
         // 1.删除旧榜单
-        foodRankingMapper.deleteByCondition(rankingDate, rankingType, areaCode, category);
+        foodRankingMapper.deleteOldRanking(rankingDate, rankingType, areaCode, category);
         //统一设置createTime
         Date now=new Date();
         for(FoodRanking item:rankingList){

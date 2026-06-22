@@ -20,7 +20,7 @@
     ORDER BY rank_position ASC
   </select>
   <!-- 删除指定条件的旧榜单，用于实时热榜刷新 -->
-  <delete id="deleteByCondition">
+  <delete id="deleteOldRanking">
     DELETE FROM food_ranking
     <where>
       ranking_date = #{rankingDate}

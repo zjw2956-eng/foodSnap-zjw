@@ -237,6 +237,8 @@ public class ShiroConfig {
         filterChainDefinitionMap.put("/swagger-resources/**", "anon");
         filterChainDefinitionMap.put("/v2/api-docs", "anon");
         filterChainDefinitionMap.put("/webjars/**", "anon");
+        //联调接口，暂时放行 TODO：后面记得删
+        filterChainDefinitionMap.put("/api/**", "anon");
         filterChainDefinitionMap.put("/**", "kickout,user");
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
         return shiroFilterFactoryBean;

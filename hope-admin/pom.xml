@@ -22,6 +22,12 @@
     </parent>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!--依赖core模板-->
         <dependency>
             <groupId>com.hope</groupId>
