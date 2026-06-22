@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-Hope-Boot 是一款基于 Spring Boot 2.0.5.RELEASE 的多模块 Maven 脚手架项目，经过裁剪后用于开发美食分享社交平台。技术栈：Spring Boot + Apache Shiro + MyBatis/tk.MyBatis + Redis + Flyway + Thymeleaf + Swagger + Minio（图片存储）+ Redisson（分布式锁）。
+Hope-Boot 是一款基于 Spring Boot 2.0.5.RELEASE 的多模块 Maven 脚手架项目，经过裁剪后用于开发美食分享社交平台。技术栈：Spring Boot + Apache Shiro + MyBatis/tk.MyBatis + Redis + Flyway + Thymeleaf + Swagger + Minio（图片存储）+ Redisson（分布式锁）+ RocketMQ（异步消息）。
 
 项目目的：用户拍照上传美食照片，AI 辅助识别菜品并生成精致文案，浏览者以弹幕形式互动，点赞、评论、收藏。根据综合评分形成每日区域美食榜单，解决"今天吃什么"的选择困难。
 
@@ -47,6 +47,10 @@ mvn spring-boot:run
 
 - `docs/实施计划.md` — 完整项目链路、功能模块、技术栈、实施阶段
 - `docs/sql/food_snap_schema.sql` — 建表语句（7 张新表 + sys_user 补充字段）
+- `docs/架构升级计划.md` — 架构演进规划（已完成的 Redis 化、已完成的 RocketMQ 异步化、待做的缓存分层/审核漏斗等）
+- `docs/RocketMQ异步发帖方案.md` — RocketMQ 异步发帖方案设计（事件驱动、Topic/Group、重试梯度、可靠性）
+- `docs/RocketMq部署(Windows docker desktop).md` — Windows Docker Desktop 部署 RocketMQ 5.4.0 教程
+- `docs/技术栈说明.md` — 各技术栈的科普向说明（Flyway/Shiro/JPA/SSO/RBAC/MyBatis/Python/Quartz）
 
 ## 启动顺序
 
@@ -105,4 +109,4 @@ hope-flyway 模块使用 Flyway 管理数据库版本。SQL 迁移脚本位于 `
 - 前端页面复用自 RuoYi 项目
 - 新增依赖 Minio（图片对象存储）和 Redisson（分布式锁），运行前需本地安装 Minio 服务
 - AI 分析由独立 Python 服务（FastAPI）提供，部署时需单独启动
-- RocketMQ 计划后续引入，当前异步处理使用 Spring @Async + 线程池
+- RocketMQ 已接入，承担发帖异步化和后续 AI 分析/内容审核的事件驱动链路。详见 `docs/RocketMQ异步发帖方案.md` 和 `docs/RocketMq部署(Windows docker desktop).md`

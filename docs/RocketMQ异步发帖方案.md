@@ -310,3 +310,23 @@ Consumer 处理完消息，必须返回状态：
 | 刷盘 | 异步刷盘 | 同步刷盘 |
 | 事务消息 | 补偿任务 | 事务消息 + 补偿双保险 |
 | 应用 | hope-admin 8086 | 多实例 + Nginx |
+
+---
+
+## 附录：实际实施记录（2026-06-22）
+
+### 实施偏差
+
+方案第十节建议在 Controller 直接在 `insert` 后调 `producer.send`，实际也是这样实施的。整体遵循方案，只有一个架构讨论点：
+
+- 最初建议 `postEventProducer.send()` 由 Service 层调用（core 是业务代码，Controller 只控制器），后续考虑发帖场景只有一个调用点，为简单直接在 Controller 调。如果后续有多个地方需要发帖事件（如运营后台手动触发），应抽到 Service 层。
+
+### 踩坑清单
+
+1. **brokerIP1 方向搞反**：`host.docker.internal` 是容器→宿主机的 DNS，而 brokerIP1 要的是"外部怎么访问 Broker"，方向相反。正确值是 `127.0.0.1`。
+2. **改 broker.conf 必须重启容器 + 重启应用**：broker 只在启动时读配置，Producer 缓存了 broker 地址。
+3. **MySQL strict mode + insert 传 null**：统计字段/时间字段都是 NOT NULL 有 DEFAULT，Controller 和 Consumer 都用 `insertSelective`（让 DB DEFAULT 兜底）而非 `insert`（写全字段传 null）。
+4. **kotlin-stdlib 版本冲突**：rocketmq-common 5.x 拉 okio-jvm 3.4.0（需 kotlin 1.5+），但 minio 链路把 kotlin-stdlib 钉在 1.2.51，缺 `ArraysKt.copyInto`。根 pom dependencyManagement 锁 1.6.0。
+5. **tk.mybatis 方法名撞内置**：FoodRankingMapper 自定义 `deleteByCondition` 与 ConditionMapper 同名内置方法冲突，改名 `deleteOldRanking`。
+6. **Tomcat 默认 multipart 限制 1MB**：加 `spring.servlet.multipart.max-file-size=10MB`。
+7. **全实体加 @Table**：原脚手架所有实体都缺 @Table，靠 Windows MySQL 大小写不敏感侥幸跑通，Linux 会崩。新实体必须加。

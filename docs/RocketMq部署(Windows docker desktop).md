@@ -68,14 +68,16 @@ networks:
     driver: bridge
 
 # 创建 conf/broker.conf
-# 在 PowerShell 中执行（自动获取本机 IP 并写入配置）
-$localIp = (Get-NetIPAddress -AddressFamily IPv4 -InterfaceAlias "以太网*" | Select-Object -First 1).IPAddress
+# 在 PowerShell 中执行（写入 broker 配置）
 @"
 brokerClusterName = DefaultCluster
 brokerName = broker-a
 brokerId = 0
-# ⚠️ 重要：Windows Docker Desktop 必须用 host.docker.internal
-brokerIP1 = host.docker.internal
+# ⚠️ 重要：brokerIP1 必须是宿主机可路由的 IP，不能用 host.docker.internal
+# host.docker.internal 是容器访问宿主机的 DNS，方向是「容器 → 宿主机」
+# 但 brokerIP1 是 broker 告诉 NameServer「外部怎么访问我」，方向是「外部 → 容器」
+# 用 host.docker.internal 会导致外部 Java 客户端拿到的地址无法解析
+brokerIP1 = 127.0.0.1
 listenPort = 10911
 namesrvAddr = namesrv:9876
 autoCreateTopicEnable = true
@@ -89,6 +91,9 @@ storeCheckpoint = /home/rocketmq/store/checkpoint
 abortFile = /home/rocketmq/store/abort
 diskMaxUsedSpaceRatio = 95
 "@ | Out-File -FilePath conf\broker.conf -Encoding utf8
+
+# ⚠️ 修改 broker.conf 后必须重启 broker 容器才生效
+docker-compose restart rmqbroker
 
 # 第三步：启动服务（3 条命令搞定）
 # 1. 启动所有服务（-d 后台运行）
@@ -110,8 +115,8 @@ rmqconsole    "java -jar ..."          Up 8080/tcp
 
 # 第四步：验证部署（3 重验证）
 验证项	操作	预期结果
-1. 控制台访问	浏览器打开 http://localhost:8090	看到 RocketMQ Console 界面
-2. Broker 注册	控制台 → 集群 → Broker	看到 broker-a 节点（地址含 host.docker.internal）
+1. 控制台访问	浏览器打开 http://localhost:8098	看到 RocketMQ Console 界面
+2. Broker 注册	控制台 → 集群 → Broker	看到 broker-a 节点（地址含 127.0.0.1）
 3. 本地连接测试	用 Java/Python 客户端连 127.0.0.1:9876	能创建 Topic 并收发消息
 
 # 核心原理总结（为什么这样写）
@@ -120,4 +125,4 @@ networks: rmq-net	创建专属网络	docker network create rmq-net
 aliases: [namesrv]	服务别名（容器内 DNS）	--network-alias namesrv
 depends_on	启动顺序依赖	手动先启动 namesrv 再启动 broker
 volumes 挂载日志/存储	持久化数据	-v ./logs:/home/rocketmq/logs
-brokerIP1 = host.docker.internal	Windows 容器访问宿主机的魔法	无直接对应（Docker Desktop 特有）
+brokerIP1 = 127.0.0.1	宿主机可路由的 IP，Java 端能直接连	无直接对应（按部署环境调整）
